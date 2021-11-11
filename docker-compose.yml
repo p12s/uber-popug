@@ -1,0 +1,23 @@
+version: '3.9'
+
+services:
+  auth:
+    build:
+      context: ./auth
+      dockerfile: Dockerfile
+    networks:
+      - uber-popug
+    ports:
+      - 8081:8081
+
+  task:
+    build:
+      context: ./task
+      dockerfile: Dockerfile
+    networks:
+      - uber-popug
+    ports:
+      - 8082:8082
+
+networks:
+  uber-popug:
