@@ -14,7 +14,8 @@ configs/config.yml
 api/files
 secrets/production
 frontend/.vscode
-.zookeeper/
+
+zk-single-kafka-single/
 zk-*
 cmake-build-*/
 *.iws
