@@ -22,5 +22,5 @@ type Task struct {
 	Id                int        `json:"id" db:"id"`
 	AssignedAccountId int        `json:"assigned_account_id" db:"assigned_account_id" binding:"required"`
 	Description       string     `json:"description" db:"description" binding:"required"`
-	Status            TaskStatus `json:"status" binding:"required"`
+	Status            TaskStatus `json:"status" db:"status" binding:"required"`
 }

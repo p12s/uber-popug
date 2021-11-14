@@ -3,6 +3,7 @@ module github.com/p12s/uber-popug/task
 go 1.17
 
 require (
+	github.com/confluentinc/confluent-kafka-go v1.7.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.7.4
 	github.com/jmoiron/sqlx v1.3.4

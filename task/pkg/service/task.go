@@ -8,6 +8,7 @@ import (
 type Tasker interface {
 	CreateTask(task models.Task) (int, error)
 	GetTaskById(taskId int) (models.Task, error)
+	GetAllTasksByAssignedAccountId(assignedAccountId int) ([]models.Task, error)
 }
 
 // TaskService - service
@@ -26,4 +27,8 @@ func (s *TaskService) CreateTask(task models.Task) (int, error) {
 
 func (s *TaskService) GetTaskById(taskId int) (models.Task, error) {
 	return s.repo.GetTaskById(taskId)
+}
+
+func (s *TaskService) GetAllTasksByAssignedAccountId(assignedAccountId int) ([]models.Task, error) {
+	return s.repo.GetAllTasksByAssignedAccountId(assignedAccountId)
 }
