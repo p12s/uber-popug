@@ -10,6 +10,7 @@ import (
 type Tasker interface {
 	CreateTask(task models.Task) (int, error)
 	GetTaskById(taskId int) (models.Task, error)
+	GetAllTasksByAssignedAccountId(assignedAccountId int) ([]models.Task, error)
 }
 
 type Task struct {
@@ -43,4 +44,16 @@ func (r *Task) GetTaskById(taskId int) (models.Task, error) {
 	}
 
 	return task, err
+}
+
+func (r *Task) GetAllTasksByAssignedAccountId(assignedAccountId int) ([]models.Task, error) {
+	var tasks []models.Task
+
+	query := fmt.Sprintf(`SELECT id, assigned_account_id, description, status FROM %s 
+		WHERE assigned_account_id = $1`, taskTable)
+	if err := r.db.Select(&tasks, query, assignedAccountId); err != nil {
+		return tasks, fmt.Errorf("get all tasks: %w", err)
+	}
+
+	return tasks, nil
 }

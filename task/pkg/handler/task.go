@@ -65,7 +65,7 @@ func (h *Handler) createTask(c *gin.Context) {
 		var data bytes.Buffer
 		if err := json.NewEncoder(&data).Encode(models.Task{
 			Id:                id,
-			AssignedAccountId: input.AssignedAccountId,
+			AssignedAccountId: input.AssignedAccountId, // передаем assigned_account_id, потому что есть возможность назначить любого
 			Description:       input.Description,
 			Status:            input.Status,
 		}); err != nil {
@@ -102,4 +102,22 @@ func (h *Handler) createTask(c *gin.Context) {
 	c.JSON(http.StatusOK, map[string]interface{}{
 		"id": id,
 	})
+}
+
+func (h *Handler) getAllTask(c *gin.Context) {
+	accountId, err := getAccountId(c)
+	if err != nil {
+		newErrorResponse(c, http.StatusNotFound, err.Error())
+		return
+	}
+	_ = accountId                       // TODO возможно будут проверки, принадлежит ли этот таск текущему юзеру
+	fmt.Println("accountId", accountId) // возможно отличается номер
+
+	tasks, err := h.services.GetAllTasksByAssignedAccountId(accountId)
+	if err != nil {
+		newErrorResponse(c, http.StatusNotFound, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, tasks)
 }
