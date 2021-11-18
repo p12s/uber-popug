@@ -40,6 +40,7 @@ func main() {
 	if err != nil {
 		logrus.Fatalf("kafka error: %s\n", err.Error())
 	}
+	go kafka.Subscribe(repos)
 	handlers := handler.NewHandler(services, kafka)
 
 	srv := new(Server)

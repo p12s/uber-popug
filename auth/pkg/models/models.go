@@ -9,19 +9,19 @@ import (
 type Role int
 
 const (
-	Employee Role = iota
+	Employee Role = iota // TODO перевести все константы в верхний регистр
 	Manager
 	Accountant
 	Admin
 )
 
 type Account struct {
-	Id        int        `json:"id" db:"id"`
+	Id        int        `json:"id,omitempty" db:"id"`
 	PublicId  uuid.UUID  `json:"public_id" db:"public_id"`
 	Name      string     `json:"name" binding:"required"`
 	Username  string     `json:"username" binding:"required"`
-	Password  string     `json:"password"`
-	Token     string     `json:"token"`
+	Password  string     `json:"password,omitempty"`
+	Token     string     `json:"token,omitempty"`
 	Role      Role       `json:"role" db:"role"`
 	CreatedAt *time.Time `json:"created_at" db:"created_at"`
 }
@@ -34,9 +34,9 @@ type SignInInput struct {
 type EventType string
 
 const (
-	EVENT_ACCOUNT_CREATED EventType = "auth.account_created"
-	EVENT_ACCOUNT_UPDATED EventType = "auth.account_updated"
-	EVENT_ACCOUNT_REMOVED EventType = "auth.account_removed"
+	EVENT_ACCOUNT_CREATED EventType = "auth.created"
+	EVENT_ACCOUNT_UPDATED EventType = "auth.updated"
+	EVENT_ACCOUNT_REMOVED EventType = "auth.removed"
 )
 
 type Event struct {
