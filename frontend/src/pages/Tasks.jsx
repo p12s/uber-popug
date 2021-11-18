@@ -1,9 +1,45 @@
-import React from 'react';
-import { Card, CardGroup, Empty, Layout, Nav, Button, Avatar } from '@douyinfe/semi-ui';
-import { IconHome, IconMoon, IconLineChartStroked, IconInviteStroked, IconSetting } from '@douyinfe/semi-icons';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Typography, Card, CardGroup, Empty, Layout, Nav, Button, Popover } from '@douyinfe/semi-ui';
+import { IconHome, IconMoon, IconExit, IconSetting } from '@douyinfe/semi-icons';
 import { IllustrationNoContent, IllustrationNoContentDark } from '@douyinfe/semi-illustrations';
+import { getAllTask } from '../actions/task';
+import { getAccount } from '../actions/auth';
+
+const TASK_STATUS_ASSIGNED = 1;
+const TASK_STATUS_COMPLETED = 2;
 
 const Login = () => {
+  const dispatch = useDispatch()
+  
+  useEffect(() => {
+    dispatch(getAllTask())
+    dispatch(getAccount())
+
+  }, [dispatch])
+
+  const { Header, Footer, Sider, Content } = Layout;
+  let currentYear = new Date().getFullYear()
+
+  function switchMode() {
+    const body = document.body;
+    if (body.hasAttribute('theme-mode')) {
+      body.removeAttribute('theme-mode');
+    } else {
+      body.setAttribute('theme-mode', 'dark');
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem('token')
+    window.location.href = '/login';
+  }
+
+  const { Paragraph } = Typography;
+  const [ spacing ] = useState(12); // setSpacing
+
+  var tasks = useSelector(state => state.task.tasks);
+
   return (
     <>
     <Layout className='layout'>
@@ -11,13 +47,12 @@ const Login = () => {
           <Nav className='nav-sidebar'
             defaultSelectedKeys={['Home']}
               items={[
-                  { itemKey: 'Home', text: 'Home', icon: <IconHome size="large" /> },
-                  { itemKey: 'IconInviteStroked', text: 'Billing', icon: <IconInviteStroked size="large" /> },
-                  { itemKey: 'IconLineChartStroked', text: 'Analytics', icon: <IconLineChartStroked size="large" /> },
+                  { itemKey: 'Home', text: 'Tasks', icon: <IconHome size="large" /> },
+                  // { itemKey: 'IconInviteStroked', text: 'Billing', icon: <IconInviteStroked size="large" /> },
+                  // { itemKey: 'IconLineChartStroked', text: 'Analytics', icon: <IconLineChartStroked size="large" /> },
                   { itemKey: 'Setting', text: 'Setting', icon: <IconSetting size="large" /> },
               ]}
               header={{
-                  logo: <img src="//lf1-cdn-tos.bytescm.com/obj/ttfe/ies/semi/webcast_logo.svg" alt='Uber Popug Jira'/>,
                   text: 'Popug Jira'
               }}
               footer={{
@@ -29,45 +64,60 @@ const Login = () => {
           <Header className='header'>
             <Nav mode='horizontal'>
               <Nav.Footer>
-                <Button
-                  theme="borderless"
-                  onClick={switchMode}
-                  icon = {<IconMoon size="large" />}
-                  className='icon'
-                  color='gray'
-                />
-                <Avatar color='blue' size='small'>YJ</Avatar>
+                <Popover content={ <article style={{ padding: 12 }}>Dark mode</article> }>
+                  <Button
+                    theme="borderless"
+                    onClick={switchMode}
+                    icon = {<IconMoon size="large" />}
+                    className='icon'
+                    color='gray'
+                  />
+                </Popover>
+                {/* <Avatar color='blue' size='small'>YJ</Avatar> */}
+                
+                <Popover content={ <article style={{ padding: 12 }}>Logout</article> }>
+                  <Button
+                    onClick={logout}
+                    icon = {<IconExit size="large" />}
+                    className='icon'
+                    color='gray'
+                  />
+                </Popover>
               </Nav.Footer>
             </Nav>
           </Header>
           <Content className='content'>
             <div className='content-body'>
-              <Empty
+              { !tasks ?
+                <Empty
                   image={<IllustrationNoContent className='empty-image-size' />}
                   darkModeImage={<IllustrationNoContentDark className='empty-image-size' />}
-                  description={'No content yet'}
+                  description={'No tasks yet'}
                   className='empty-image'
-              />
-              <CardGroup spacing={spacing}>
-                {
-                  new Array(8).fill(null).map((v,idx)=>(
+                />
+              :
+                <CardGroup spacing={spacing}>
+                  { tasks.map((task, index) => 
                     <Card 
-                      key={idx}
+                      key={index+1}
                       shadows='hover'
-                      title='Card title'
+                      title={task.id + '. ' + task.description}
                       headerLine={false}
-                      style={{ width:260 }}
-                      headerExtraContent={
-                        <Text link>
-                          More
-                        </Text>
-                      }
+                      style={{ width:260, minHeight: 280 }}
                     >
-                      <Text>Card content</Text>
+                    <Paragraph>
+                      {task.status === TASK_STATUS_ASSIGNED && <p>Assigned 🔥</p>}
+                      {task.status === TASK_STATUS_COMPLETED && <p>Completed 👍</p>}
+                    </Paragraph>
+                    <Paragraph>{task.public_id}</Paragraph>
+                    <Paragraph>{task.created_at}</Paragraph>
+                    <Paragraph>{task.description}</Paragraph>
+                    
+                    <Paragraph>Assigned account id: {task.assigned_account_id}</Paragraph>
                     </Card>
-                  ))
-                }
-              </CardGroup>
+                  )}
+                </CardGroup>
+              }
             </div>
           </Content>
           <Footer className="footer">

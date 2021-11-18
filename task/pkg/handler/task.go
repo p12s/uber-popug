@@ -10,6 +10,7 @@ import (
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/p12s/uber-popug/task/pkg/models"
 )
 
@@ -51,6 +52,9 @@ func (h *Handler) createTask(c *gin.Context) {
 	}
 
 	// пусть пока таск ассайнится на текущего пользователя
+	input.PublicId = uuid.New()
+	input.AssignedAccountId = accountId
+	input.Status = models.Assigned
 	id, err := h.services.CreateTask(input)
 	if err != nil {
 		newErrorResponse(c, http.StatusNotFound, err.Error())
@@ -63,8 +67,12 @@ func (h *Handler) createTask(c *gin.Context) {
 		deliveryChan := make(chan kafka.Event)
 
 		var data bytes.Buffer
+		// TODO пердавть название события
+		// eventName: 'Event name',
+		// payload: { ... }
 		if err := json.NewEncoder(&data).Encode(models.Task{
 			Id:                id,
+			PublicId:          input.PublicId,          // TODO проверить что uuid подтянулся
 			AssignedAccountId: input.AssignedAccountId, // передаем assigned_account_id, потому что есть возможность назначить любого
 			Description:       input.Description,
 			Status:            input.Status,
@@ -73,7 +81,9 @@ func (h *Handler) createTask(c *gin.Context) {
 			return
 		}
 
-		accountsStreamTopic := os.Getenv("CLOUDKARAFKA_TOPIC_PREFIX") + "tasks"
+		// TODO переименовать топики
+		// TODO можно будет обойтись 5тью топиками: stream (task&user) + task-lifecycle + billing-transcations, в таком случае сможешь собрать всю систему с аналитикой
+		accountsStreamTopic := os.Getenv("CLOUDKARAFKA_TOPIC_PREFIX") + "task-lifecycle" // "tasks"
 		err = h.broker.Producer.Produce(&kafka.Message{
 			TopicPartition: kafka.TopicPartition{
 				Topic:     &accountsStreamTopic,
@@ -115,9 +125,12 @@ func (h *Handler) getAllTask(c *gin.Context) {
 
 	tasks, err := h.services.GetAllTasksByAssignedAccountId(accountId)
 	if err != nil {
+		fmt.Println("error - task handler", err.Error())
+
 		newErrorResponse(c, http.StatusNotFound, err.Error())
 		return
 	}
+	fmt.Println("NOT error - OK task handler", tasks)
 
 	c.JSON(http.StatusOK, tasks)
 }

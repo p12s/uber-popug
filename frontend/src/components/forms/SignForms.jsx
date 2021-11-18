@@ -11,11 +11,11 @@ const SignForms = () => {
       <div className="sign-form">
         <img className="sign-form-img" alt="Popug Jira" src={parrotImage} />
         <Tabs type="line">
-          <TabPane tab="Sign Up" itemKey="1">
-            <SignUp/>
-          </TabPane>
-          <TabPane tab="Sign In" itemKey="2">
+          <TabPane tab="Sign In" itemKey="1">
             <SignIn/>
+          </TabPane>
+          <TabPane tab="Sign Up" itemKey="2">
+            <SignUp/>
           </TabPane>
         </Tabs>
       </div>

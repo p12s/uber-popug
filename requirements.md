@@ -1,8 +1,8 @@
 # Проектирование PopugJira
 
 ## 1. Собираем требования для PopugJira
-![Общая схема](https://github.com/p12s/uber-popug/blob/master/domain-model-v1.png?raw=true)  
-[Общая схема](https://lucid.app/lucidchart/408140b3-2eaf-4c6d-8006-dbde37212f06/edit?viewport_loc=164%2C9%2C1876%2C1136%2C0_0&invitationId=inv_02c3bab0-e84e-4117-a925-69861b830d41)    
+![Первый этап схемы](https://github.com/p12s/uber-popug/blob/master/domain-model-v1.png?raw=true)  
+[Обновляемая схема](https://lucid.app/lucidchart/408140b3-2eaf-4c6d-8006-dbde37212f06/edit?viewport_loc=164%2C9%2C1876%2C1136%2C0_0&invitationId=inv_02c3bab0-e84e-4117-a925-69861b830d41)    
   
 ###  Нефункциональные требования  
 1. Никакого реалтайма тоже не нужно, хватит рефреша страницы для всех дашбордов и пользовательского интерфейса.  

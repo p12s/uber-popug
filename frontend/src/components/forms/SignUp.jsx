@@ -14,9 +14,9 @@ const SignUp = () => {
   return (
     <>
       <Form layout='vertical'>
-        <Form.Input value={name} onChange={setName} label='Name' />
-        <Form.Input value={username} onChange={setUsername} label='Login' />
-        <Form.Input value={password} onChange={setPassword} label='Password' mode='password' />
+        <Form.Input value={name} onChange={setName} field='name' label='Name' />
+        <Form.Input value={username} onChange={setUsername} field='username' label='Login' />
+        <Form.Input value={password} onChange={setPassword} field='password' label='Password' mode='password' autoComplete="on" />
         <Button onClick={handleSignUp} theme="solid" type="secondary" size="large">Send</Button>
       </Form>
     </>

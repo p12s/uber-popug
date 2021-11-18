@@ -13,8 +13,8 @@ const SignIn = () => {
   return (
     <>
       <Form layout='vertical'>
-        <Form.Input value={username} onChange={setUsername} label='Login' />
-        <Form.Input value={password} onChange={setPassword} label='Password' mode='password' />
+        <Form.Input value={username} onChange={setUsername} field='login' label='Login' />
+        <Form.Input value={password} onChange={setPassword} field='password' label='Password' mode='password' autoComplete="on"/>
         <Button onClick={handleSignIn} theme="solid" type="secondary" size="large">Send</Button>
       </Form>
     </>

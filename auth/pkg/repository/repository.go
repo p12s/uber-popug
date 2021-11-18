@@ -23,10 +23,13 @@ func NewRepository(db *sqlx.DB) *Repository {
 func createAccountTable(db *sqlx.DB) {
 	query := `CREATE TABLE IF NOT EXISTS account (
 		"id" integer NOT NULL PRIMARY KEY AUTOINCREMENT,		
-		"name" TEXT,
+		"public_id" TEXT NOT NULL,
+		"name" TEXT NOT NULL,
 		"token" TEXT,
-		"username" TEXT,		
-		"password_hash" TEXT		
+		"username" TEXT NOT NULL,		
+		"password_hash" TEXT NOT NULL,
+		"role" INTEGER DEFAULT 0,
+		"created_at" DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
 	  );`
 
 	fmt.Println("Create auth.account table...")

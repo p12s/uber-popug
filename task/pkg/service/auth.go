@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
 	"github.com/p12s/uber-popug/task/pkg/models"
 	"github.com/p12s/uber-popug/task/pkg/repository"
 )
@@ -25,8 +26,8 @@ type tokenClaims struct {
 
 type Authorizer interface {
 	ParseToken(token string) (int, error)
-	GetAccount(token string) (models.TaskAccount, error)
-	GetAccountById(accountPublicId int) (models.TaskAccount, error)
+	GetAccount(token string) (models.Account, error)
+	GetAccountById(publicId uuid.UUID) (models.Account, error)
 }
 
 // AuthService - service
@@ -39,12 +40,12 @@ func NewAuthService(repo repository.Authorizer) *AuthService {
 	return &AuthService{repo: repo}
 }
 
-func (s *AuthService) GetAccount(token string) (models.TaskAccount, error) {
+func (s *AuthService) GetAccount(token string) (models.Account, error) {
 	return s.repo.GetAccount(token)
 }
 
-func (s *AuthService) GetAccountById(accountPublicId int) (models.TaskAccount, error) {
-	return s.repo.GetAccountById(accountPublicId)
+func (s *AuthService) GetAccountById(publicId uuid.UUID) (models.Account, error) {
+	return s.repo.GetAccountById(publicId)
 }
 
 func (s *AuthService) ParseToken(accessToken string) (int, error) {

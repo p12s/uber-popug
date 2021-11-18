@@ -25,10 +25,10 @@ type tokenClaims struct {
 
 // Authorization - signup/signin
 type Authorization interface {
-	CreateAccount(account models.SignUpInput) (int, error)
+	CreateAccount(account models.Account) (int, error)
 	GenerateToken(username, password string) (string, error)
 	ParseToken(token string) (int, error)
-	GetAccountById(accountId int) (models.AuthAccount, error)
+	GetAccountById(accountId int) (models.Account, error)
 }
 
 // AuthService - service
@@ -41,7 +41,7 @@ func NewAuthService(repo repository.Authorization) *AuthService {
 	return &AuthService{repo: repo}
 }
 
-func (s *AuthService) CreateAccount(account models.SignUpInput) (int, error) {
+func (s *AuthService) CreateAccount(account models.Account) (int, error) {
 	account.Password = generatePasswordHash(account.Password)
 	return s.repo.CreateAccount(account)
 }
@@ -91,6 +91,6 @@ func generatePasswordHash(password string) string {
 	return fmt.Sprintf("%x", hash.Sum([]byte(salt)))
 }
 
-func (s *AuthService) GetAccountById(accountId int) (models.AuthAccount, error) {
+func (s *AuthService) GetAccountById(accountId int) (models.Account, error) {
 	return s.repo.GetAccountById(accountId)
 }

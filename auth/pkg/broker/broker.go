@@ -19,7 +19,6 @@ func NewKafka() (*Kafka, error) {
 		"sasl.mechanisms":      "SCRAM-SHA-256",
 		"sasl.username":        os.Getenv("CLOUDKARAFKA_USERNAME"),
 		"sasl.password":        os.Getenv("CLOUDKARAFKA_PASSWORD"),
-		//"debug":                "generic,broker,security",
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error in kafka constructor, while create producer: %w", err)
@@ -35,7 +34,6 @@ func NewKafka() (*Kafka, error) {
 		"go.events.channel.enable":        true,
 		"go.application.rebalance.enable": true,
 		"default.topic.config":            kafka.ConfigMap{"auto.offset.reset": "earliest"},
-		//"debug":                           "generic,broker,security",
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error in kafka constructor, while create consumer: %w", err)

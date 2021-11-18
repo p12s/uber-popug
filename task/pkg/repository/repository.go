@@ -26,11 +26,13 @@ func NewRepository(db *sqlx.DB) *Repository {
 
 func createAccountTable(db *sqlx.DB) {
 	query := `CREATE TABLE IF NOT EXISTS account (
-		"id" integer NOT NULL PRIMARY KEY AUTOINCREMENT,		
-		"public_id" integer NOT NULL,		
-		"name" TEXT,
-		"username" TEXT,
-		"token" TEXT
+		"id" integer NOT NULL PRIMARY KEY AUTOINCREMENT,			
+		"public_id" TEXT NOT NULL,
+		"name" TEXT NOT NULL,
+		"token" TEXT,
+		"username" TEXT NOT NULL,
+		"role" INTEGER DEFAULT 0,
+		"created_at" DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
 	  );`
 
 	fmt.Println("Create task.account table...")
@@ -42,13 +44,14 @@ func createAccountTable(db *sqlx.DB) {
 	fmt.Println("task.account table created")
 }
 
-// TODO public_id set null
 func createTaskTable(db *sqlx.DB) {
 	query := `CREATE TABLE IF NOT EXISTS task (
 		"id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,		
 		"assigned_account_id" INTEGER NOT NULL,		
+		"public_id" TEXT NOT NULL,
 		"description" TEXT,
-		"status" INTEGER,
+		"status" INTEGER DEFAULT 0,
+		"created_at" DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
 		FOREIGN KEY(assigned_account_id) REFERENCES account(public_id)
 	  );`
 

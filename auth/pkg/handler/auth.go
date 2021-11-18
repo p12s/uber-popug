@@ -9,12 +9,15 @@ import (
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/p12s/uber-popug/auth/pkg/models"
 )
 
 func (h *Handler) signUp(c *gin.Context) {
-	var input models.SignUpInput
+	var input models.Account
 
+	input.PublicId = uuid.New()
+	input.Role = models.Employee
 	if err := c.BindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, "invalid input body")
 		return
@@ -32,11 +35,7 @@ func (h *Handler) signUp(c *gin.Context) {
 		deliveryChan := make(chan kafka.Event)
 
 		var data bytes.Buffer
-		if err := json.NewEncoder(&data).Encode(models.AuthAccount{
-			Id:       id,
-			Name:     input.Name,
-			Username: input.Username,
-		}); err != nil {
+		if err := json.NewEncoder(&data).Encode(input); err != nil {
 			fmt.Printf("auth brocker data encode: %s\n", err.Error())
 			return
 		}
@@ -79,6 +78,8 @@ func (h *Handler) signIn(c *gin.Context) {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
+	fmt.Println("пришли даныне")
+	fmt.Println(input)
 
 	token, err := h.services.Authorization.GenerateToken(input.Username, input.Password)
 	if err != nil {
