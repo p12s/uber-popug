@@ -7,6 +7,7 @@ import (
 
 const (
 	accountTable = "account"
+	taskTable    = "task"
 )
 
 // Config - db

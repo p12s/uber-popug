@@ -35,15 +35,18 @@ func (h *Handler) signUp(c *gin.Context) {
 		deliveryChan := make(chan kafka.Event)
 
 		var data bytes.Buffer
-		if err := json.NewEncoder(&data).Encode(input); err != nil {
+		if err := json.NewEncoder(&data).Encode(models.Event{
+			Type:  models.EVENT_ACCOUNT_CREATED,
+			Value: input,
+		}); err != nil {
 			fmt.Printf("auth brocker data encode: %s\n", err.Error())
 			return
 		}
 
-		accountsStreamTopic := os.Getenv("CLOUDKARAFKA_TOPIC_PREFIX") + "accounts-stream"
+		cudStreamTopic := os.Getenv("CLOUDKARAFKA_TOPIC_PREFIX") + "stream"
 		err = h.broker.Producer.Produce(&kafka.Message{
 			TopicPartition: kafka.TopicPartition{
-				Topic:     &accountsStreamTopic,
+				Topic:     &cudStreamTopic,
 				Partition: kafka.PartitionAny,
 			},
 			Value: data.Bytes(),
@@ -78,14 +81,16 @@ func (h *Handler) signIn(c *gin.Context) {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	fmt.Println("пришли даныне")
-	fmt.Println(input)
 
 	token, err := h.services.Authorization.GenerateToken(input.Username, input.Password)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
+
+	// TODO здесь можно отправить токен в другие сервисы,
+	// когда юзер запросит страницу из отдельного сервиса - токен в его браузере == токену в сервисе
+	// и не надо будет запрашивать сервис Auth
 
 	c.JSON(http.StatusOK, map[string]interface{}{
 		"token": token,
@@ -104,8 +109,6 @@ func (h *Handler) token(c *gin.Context) {
 		newErrorResponse(c, http.StatusNotFound, err.Error())
 		return
 	}
-
-	// TODO пройти флоу (если успею - с фронтом) не надо ли тут что кидать в брокер
 
 	c.JSON(http.StatusOK, account)
 }

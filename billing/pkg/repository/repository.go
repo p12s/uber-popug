@@ -9,14 +9,17 @@ import (
 
 // Repository - repo
 type Repository struct {
-	Authorization
+	Authorizer
+	Tasker
 }
 
 // NewRepository - constructor
 func NewRepository(db *sqlx.DB) *Repository {
 	createAccountTable(db)
+	createTaskTable(db)
+
 	return &Repository{
-		Authorization: NewAuth(db),
+		Authorizer: NewAuth(db),
 	}
 }
 
@@ -39,4 +42,25 @@ func createAccountTable(db *sqlx.DB) {
 	}
 	statement.Exec()
 	fmt.Println("billing.account table created")
+}
+
+func createTaskTable(db *sqlx.DB) {
+	query := `CREATE TABLE IF NOT EXISTS task (
+		"id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,		
+		"assigned_account_id" INTEGER NOT NULL,		
+		"public_id" TEXT NOT NULL,
+		"description" TEXT,
+		"jira_id" TEXT,
+		"status" INTEGER DEFAULT 0,
+		"created_at" DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+		FOREIGN KEY(assigned_account_id) REFERENCES account(public_id)
+	  );`
+
+	fmt.Println("Create billing.task table...")
+	statement, err := db.Prepare(query)
+	if err != nil {
+		log.Fatal("create billing.task table error", err.Error())
+	}
+	statement.Exec()
+	fmt.Println("billing.task table created")
 }

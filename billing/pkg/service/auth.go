@@ -23,8 +23,7 @@ type tokenClaims struct {
 	AccountId int `json:"account_id"`
 }
 
-// Authorization - signup/signin
-type Authorization interface {
+type Authorizer interface {
 	CreateAccount(account models.Account) (int, error)
 	GenerateToken(username, password string) (string, error)
 	ParseToken(token string) (int, error)

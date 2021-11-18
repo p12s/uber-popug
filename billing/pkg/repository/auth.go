@@ -8,8 +8,7 @@ import (
 	"github.com/p12s/uber-popug/billing/pkg/models"
 )
 
-// Authorization - signup/signin
-type Authorization interface {
+type Authorizer interface {
 	CreateAccount(account models.Account) (int, error)
 	GetAccount(username, password string) (models.Account, error)
 	GetAccountById(accountId int) (models.Account, error)
