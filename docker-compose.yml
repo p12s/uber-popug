@@ -19,5 +19,23 @@ services:
     ports:
       - 8082:8082
 
+  billing:
+    build:
+      context: ./billing
+      dockerfile: Dockerfile
+    networks:
+      - uber-popug
+    ports:
+      - 8083:8083
+
+  analitycs:
+    build:
+      context: ./analitycs
+      dockerfile: Dockerfile
+    networks:
+      - uber-popug
+    ports:
+      - 8084:8084
+
 networks:
   uber-popug:
