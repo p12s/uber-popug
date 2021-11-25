@@ -6,37 +6,13 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/p12s/uber-popug/task/internal/tools"
-	"github.com/p12s/uber-popug/task/pkg/models"
+	"github.com/p12s/uber-popug/billing/pkg/models"
+	"github.com/p12s/uber-popug/billing/pkg/tools"
 )
-
-func (h *Handler) getTask(c *gin.Context) {
-	accountId, err := getAccountId(c)
-	if err != nil {
-		newErrorResponse(c, http.StatusNotFound, err.Error())
-		return
-	}
-	_ = accountId // TODO возможно будут проверки, принадлежит ли этот таск текущему юзеру
-
-	taskId, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "invalid task id param")
-		return
-	}
-
-	task, err := h.services.GetTaskById(taskId)
-	if err != nil {
-		newErrorResponse(c, http.StatusNotFound, err.Error())
-		return
-	}
-
-	c.JSON(http.StatusOK, task)
-}
 
 func (h *Handler) createTask(c *gin.Context) {
 	accountId, err := getAccountId(c)
@@ -87,7 +63,6 @@ func (h *Handler) createTask(c *gin.Context) {
 			return
 		}
 
-		// TODO переименовать топики
 		accountsStreamTopic := os.Getenv("CLOUDKARAFKA_TOPIC_PREFIX") + "task-lifecycle"
 		err = h.broker.Producer.Produce(&kafka.Message{
 			TopicPartition: kafka.TopicPartition{
@@ -117,25 +92,4 @@ func (h *Handler) createTask(c *gin.Context) {
 	c.JSON(http.StatusOK, map[string]interface{}{
 		"id": id,
 	})
-}
-
-func (h *Handler) getAllTask(c *gin.Context) {
-	accountId, err := getAccountId(c)
-	if err != nil {
-		newErrorResponse(c, http.StatusNotFound, err.Error())
-		return
-	}
-	_ = accountId                       // TODO возможно будут проверки, принадлежит ли этот таск текущему юзеру
-	fmt.Println("accountId", accountId) // возможно отличается номер
-
-	tasks, err := h.services.GetAllTasksByAssignedAccountId(accountId)
-	if err != nil {
-		fmt.Println("error - task handler", err.Error())
-
-		newErrorResponse(c, http.StatusNotFound, err.Error())
-		return
-	}
-	fmt.Println("NOT error - OK task handler", tasks)
-
-	c.JSON(http.StatusOK, tasks)
 }

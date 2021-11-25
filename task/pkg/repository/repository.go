@@ -50,6 +50,7 @@ func createTaskTable(db *sqlx.DB) {
 		"assigned_account_id" INTEGER NOT NULL,		
 		"public_id" TEXT NOT NULL,
 		"description" TEXT,
+		"jira_id" TEXT,
 		"status" INTEGER DEFAULT 0,
 		"created_at" DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
 		FOREIGN KEY(assigned_account_id) REFERENCES account(public_id)
