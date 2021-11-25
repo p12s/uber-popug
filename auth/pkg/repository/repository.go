@@ -9,14 +9,14 @@ import (
 
 // Repository - repo
 type Repository struct {
-	Authorization
+	Authorizer
 }
 
 // NewRepository - constructor
 func NewRepository(db *sqlx.DB) *Repository {
 	createAccountTable(db)
 	return &Repository{
-		Authorization: NewAuth(db),
+		Authorizer: NewAuth(db),
 	}
 }
 
@@ -31,12 +31,10 @@ func createAccountTable(db *sqlx.DB) {
 		"role" INTEGER DEFAULT 0,
 		"created_at" DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL
 	  );`
-
-	fmt.Println("Create auth.account table...")
 	statement, err := db.Prepare(query)
 	if err != nil {
 		log.Fatal("create auth.account table error", err.Error())
 	}
 	statement.Exec()
-	fmt.Println("auth.account table created")
+	fmt.Println("auth.account table created 🗂")
 }

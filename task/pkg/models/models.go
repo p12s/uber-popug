@@ -6,13 +6,13 @@ import (
 	"github.com/google/uuid"
 )
 
-type Role int // TODO перевести все константы в верхний регистр
+type Role int
 
 const (
-	Employee Role = iota
-	Manager
-	Accountant
-	Admin
+	ROLE_EMPLOYEE Role = iota
+	ROLE_MANAGER
+	ROLE_ACCOUNTANT
+	ROLE_ADMIN
 )
 
 type Account struct {
@@ -23,6 +23,22 @@ type Account struct {
 	Token     string     `json:"token,omitempty" db:"token"`
 	Role      Role       `json:"role" db:"role" binding:"required"`
 	CreatedAt *time.Time `json:"created_at" db:"created_at"`
+}
+
+type UpdateAccountInput struct {
+	PublicId uuid.UUID `json:"public_id" db:"public_id" binding:"required"`
+	Name     *string   `json:"name" db:"role"`
+	Password *string   `json:"password,omitempty" db:"role"`
+	Role     *Role     `json:"role" db:"role"`
+}
+
+type AccountToken struct {
+	PublicId uuid.UUID `json:"public_id" db:"public_id" binding:"required"`
+	Token    string    `json:"token" db:"token" binding:"token"`
+}
+
+type DeleteAccountInput struct {
+	PublicId uuid.UUID `json:"public_id" db:"public_id" binding:"required"`
 }
 
 type TaskStatus int
@@ -36,19 +52,29 @@ const (
 type Task struct {
 	Id                int        `json:"id" db:"id"`
 	PublicId          uuid.UUID  `json:"public_id" db:"public_id"`
-	AssignedAccountId int        `json:"assigned_account_id" db:"assigned_account_id"`
+	AssignedAccountId uuid.UUID  `json:"assigned_account_id" db:"assigned_account_id"`
 	Description       string     `json:"description" db:"description" binding:"required"`
 	JiraId            string     `json:"jira_id,omitempty" db:"jira_id"`
 	Status            TaskStatus `json:"status" db:"status"`
 	CreatedAt         *time.Time `json:"created_at" db:"created_at"`
 }
 
+type BirdCageTask struct {
+	PublicId  uuid.UUID `json:"public_id" binding:"required"`
+	AccountId uuid.UUID `json:"account_id" binding:"required"`
+}
+
+type MilletBowlTask struct {
+	PublicId uuid.UUID `json:"public_id" binding:"required"`
+}
+
 type EventType string
 
 const (
-	EVENT_ACCOUNT_CREATED EventType = "auth.created"
-	EVENT_ACCOUNT_UPDATED EventType = "auth.updated"
-	EVENT_ACCOUNT_REMOVED EventType = "auth.removed"
+	EVENT_ACCOUNT_CREATED       EventType = "auth.created"
+	EVENT_ACCOUNT_UPDATED       EventType = "auth.updated"
+	EVENT_ACCOUNT_DELETED       EventType = "auth.deleted"
+	EVENT_ACCOUNT_TOKEN_UPDATED EventType = "auth.token_updated"
 
 	EVENT_TASK_CREATED       EventType = "task.created"
 	EVENT_TASK_BIRD_CAGED    EventType = "task.bird_caged"

@@ -45,6 +45,7 @@ func (h *Handler) userIdentity(c *gin.Context) {
 	c.Set(accountCtx, accountId)
 }
 
+// достается primary_id (int) account-а, а нужно public_id (uuid.UUID)
 func getAccountId(c *gin.Context) (int, error) {
 	id, ok := c.Get(accountCtx)
 

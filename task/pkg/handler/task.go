@@ -1,14 +1,10 @@
 package handler
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 
-	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/p12s/uber-popug/task/internal/tools"
@@ -44,7 +40,6 @@ func (h *Handler) createTask(c *gin.Context) {
 		newErrorResponse(c, http.StatusNotFound, err.Error())
 		return
 	}
-	_ = accountId // TODO возможно будет использоваться
 
 	var input models.Task
 	if err = c.BindJSON(&input); err != nil {
@@ -52,71 +47,82 @@ func (h *Handler) createTask(c *gin.Context) {
 		return
 	}
 
+	// TODO достаю по account_id (int) - костыль. Надо по public_id (uuid.UUID)
+	account, err := h.services.GetAccountByPrimaryId(accountId)
+	if err != nil {
+		newErrorResponse(c, http.StatusNotFound, err.Error())
+		return
+	}
+	// пусть пока таск ассайнится на текущего пользователя (чей токен инициировал создание)
+	input.AssignedAccountId = account.PublicId
+
 	input.Description = tools.GetPureTitle(input.Description)
 	input.JiraId = tools.GetPureTaskKey(input.Description)
-	// пусть пока таск ассайнится на текущего пользователя (чей токен инициировал создание)
 	input.PublicId = uuid.New()
-	input.AssignedAccountId = accountId
 	input.Status = models.TASK_BIRD_IN_CAGE
 
-	fmt.Println("create task")
-	fmt.Println(input)
 	id, err := h.services.CreateTask(input)
 	if err != nil {
 		newErrorResponse(c, http.StatusNotFound, err.Error())
 		return
 	}
 
-	// TODO вынести отсюда и сделать логирование ошибок (возможно не только ошибок)
-	// TODO точно ли нужен channel - возможно упростить
-	go func() {
-		deliveryChan := make(chan kafka.Event)
+	// CUD-событие на создание таска
+	go h.broker.Event(models.EVENT_TASK_CREATED, h.broker.TopicTaskCUD,
+		&models.Task{
+			PublicId:    input.PublicId,
+			Description: input.Description,
+			Status:      input.Status,
+		})
 
-		var data bytes.Buffer
-		if err := json.NewEncoder(&data).Encode(models.Event{
-			Type: models.EVENT_TASK_CREATED,
-			Value: models.Task{
-				Id:                id,
-				PublicId:          input.PublicId,
-				AssignedAccountId: input.AssignedAccountId,
-				Description:       input.Description,
-				Status:            input.Status,
-			},
-		}); err != nil {
-			fmt.Printf("auth brocker data encode: %s\n", err.Error())
-			return
-		}
-
-		// TODO переименовать топики
-		accountsStreamTopic := os.Getenv("CLOUDKARAFKA_TOPIC_PREFIX") + "task-lifecycle"
-		err = h.broker.Producer.Produce(&kafka.Message{
-			TopicPartition: kafka.TopicPartition{
-				Topic:     &accountsStreamTopic,
-				Partition: kafka.PartitionAny,
-			},
-			Value: data.Bytes(),
-		}, deliveryChan)
-		if err != nil {
-			fmt.Printf("task broker produce: %s\n", err.Error())
-			return
-		}
-
-		e := <-deliveryChan
-		m := e.(*kafka.Message)
-
-		if m.TopicPartition.Error != nil {
-			fmt.Printf("Delivery failed: %v\n", m.TopicPartition.Error)
-		} else {
-			fmt.Printf("Delivered message to topic %s [%d] at offset %v\n",
-				*m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
-		}
-
-		close(deliveryChan)
-	}()
+	// BE-событие на ассайн таска
+	go h.broker.Event(models.EVENT_TASK_BIRD_CAGED, h.broker.TopicTaskBE,
+		&models.Task{
+			PublicId:          input.PublicId,
+			AssignedAccountId: account.PublicId,
+		})
 
 	c.JSON(http.StatusOK, map[string]interface{}{
 		"id": id,
 	})
+}
+
+func (h *Handler) birdCageTask(c *gin.Context) {
+	var input models.BirdCageTask
+	if err := c.BindJSON(&input); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err := h.services.BirdCageTask(input.PublicId, input.AccountId)
+	if err != nil {
+		newErrorResponse(c, http.StatusNotFound, err.Error())
+		return
+	}
+
+	go h.broker.Event(models.EVENT_TASK_BIRD_CAGED, h.broker.TopicTaskBE,
+		&input)
+
+	c.JSON(http.StatusOK, nil)
+}
+
+func (h *Handler) milletBowlTask(c *gin.Context) {
+	var input models.MilletBowlTask
+	if err := c.BindJSON(&input); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err := h.services.MilletBowlTask(input.PublicId)
+	if err != nil {
+		newErrorResponse(c, http.StatusNotFound, err.Error())
+		return
+	}
+
+	go h.broker.Event(models.EVENT_TASK_MILLET_BOWLED, h.broker.TopicTaskBE,
+		&input)
+
+	c.JSON(http.StatusOK, nil)
 }
 
 func (h *Handler) getAllTask(c *gin.Context) {
@@ -125,8 +131,9 @@ func (h *Handler) getAllTask(c *gin.Context) {
 		newErrorResponse(c, http.StatusNotFound, err.Error())
 		return
 	}
-	_ = accountId                       // TODO возможно будут проверки, принадлежит ли этот таск текущему юзеру
-	fmt.Println("accountId", accountId) // возможно отличается номер
+	_ = accountId // TODO возможно будут проверки, принадлежит ли этот таск текущему юзеру
+	// employee - отдавать только свои таски,
+	// manager, accountant, ... - другие правила
 
 	tasks, err := h.services.GetAllTasksByAssignedAccountId(accountId)
 	if err != nil {
@@ -138,4 +145,12 @@ func (h *Handler) getAllTask(c *gin.Context) {
 	fmt.Println("NOT error - OK task handler", tasks)
 
 	c.JSON(http.StatusOK, tasks)
+}
+
+func (h *Handler) birdCageAllTasks(c *gin.Context) {
+	// достаем все таски
+	// достаем всех работников
+	// переассайниваем рандомно, в цикле отправляя события
+	fmt.Println("resaasigne all tasks")
+	c.JSON(http.StatusOK, nil)
 }

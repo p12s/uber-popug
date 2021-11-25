@@ -16,3 +16,13 @@ tasks:
     desc: Run docker-compose
     cmds:
       - docker-compose up --build
+
+  2:
+    desc: Check build all services
+    cmds:
+      - pwd
+      - cd auth && go build cmd/main.go 
+      - cd ../task  && go build cmd/main.go 
+      - cd ../billing && go build cmd/main.go 
+      - cd ../analitycs && go build cmd/main.go 
+      - cd .. && pwd

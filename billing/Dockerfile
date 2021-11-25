@@ -26,4 +26,4 @@ RUN ls -la && pwd
 
 CMD ["./app"]
 
-HEALTHCHECK --interval=5s --timeout=3s --start-period=1s CMD curl --fail http://127.0.0.1:8083/health || exit 1
+HEALTHCHECK --interval=5s --timeout=3s --start-period=1s CMD curl --fail http://127.0.0.1:8003/health || exit 1

@@ -182,12 +182,17 @@
 							"    pm.expect(response.name).to.eql(pm.collectionVariables.get(\"name\"));",
 							"    pm.expect(response.username).to.eql(pm.collectionVariables.get(\"username\"));",
 							"})",
+							"pm.collectionVariables.set(\"public_id\", response.public_id);",
+							"pm.collectionVariables.set(\"role\", response.role);",
 							""
 						],
 						"type": "text/javascript"
 					}
 				}
 			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
 			"request": {
 				"auth": {
 					"type": "bearer",
@@ -199,7 +204,7 @@
 						}
 					]
 				},
-				"method": "POST",
+				"method": "GET",
 				"header": [],
 				"body": {
 					"mode": "raw",
@@ -219,6 +224,130 @@
 					"port": "{{port}}",
 					"path": [
 						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update account",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"requestJson = JSON.parse(pm.request.body.raw)",
+							"pm.collectionVariables.set(\"role\", requestJson.role);",
+							"pm.collectionVariables.set(\"password\", requestJson.password);",
+							"pm.collectionVariables.set(\"name\", requestJson.name);",
+							"",
+							"pm.test(\"Content-Type is present\", function () {",
+							"    pm.response.to.have.header(\"Content-Type\");",
+							"});",
+							"",
+							"pm.test(\"Update account Ok\", () => {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"public_id\": \"{{public_id}}\",\n    \"name\": \"Ivan New\",\n    \"password\": \"new-qwerty\",\n    \"role\": 3\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{protocol}}://{{host}}:{{port}}/account",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"account"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete account",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Content-Type is present\", function () {",
+							"    pm.response.to.have.header(\"Content-Type\");",
+							"});",
+							"",
+							"pm.test(\"Delete account Ok\", () => {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.collectionVariables.set(\"name\", \"\");",
+							"pm.collectionVariables.set(\"username\", \"\");",
+							"pm.collectionVariables.set(\"password\", \"qwerty\");",
+							"pm.collectionVariables.set(\"created_account_id\", 0);",
+							"pm.collectionVariables.set(\"public_id\", \"\");",
+							"pm.collectionVariables.set(\"token\", \"\");",
+							"pm.collectionVariables.set(\"role\", 0);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"public_id\": \"{{public_id}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{protocol}}://{{host}}:{{port}}/account",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"account"
 					]
 				}
 			},
@@ -247,6 +376,18 @@
 	],
 	"variable": [
 		{
+			"key": "protocol",
+			"value": "http"
+		},
+		{
+			"key": "host",
+			"value": "localhost"
+		},
+		{
+			"key": "port",
+			"value": "8001"
+		},
+		{
 			"key": "name",
 			"value": "---"
 		},
@@ -259,24 +400,20 @@
 			"value": "qwerty"
 		},
 		{
-			"key": "protocol",
-			"value": "http"
-		},
-		{
-			"key": "host",
-			"value": "localhost"
-		},
-		{
-			"key": "port",
-			"value": "8081"
-		},
-		{
 			"key": "created_account_id",
 			"value": "---"
 		},
 		{
 			"key": "token",
 			"value": "---"
+		},
+		{
+			"key": "public_id",
+			"value": "---"
+		},
+		{
+			"key": "role",
+			"value": "0"
 		}
 	]
 }

@@ -25,9 +25,14 @@ type tokenClaims struct {
 }
 
 type Authorizer interface {
+	CreateAccount(account models.Account) (int, error)
+	UpdateAccount(input models.UpdateAccountInput) error
+	DeleteAccountByPublicId(accountPublicId uuid.UUID) error
 	ParseToken(token string) (int, error)
 	GetAccount(token string) (models.Account, error)
 	GetAccountById(publicId uuid.UUID) (models.Account, error)
+	// это костыльный метод - опираться нужно только на publicId uuid.UUID
+	GetAccountByPrimaryId(accountId int) (models.Account, error)
 }
 
 // AuthService - service
@@ -38,6 +43,18 @@ type AuthService struct {
 // NewAuthService - constructor
 func NewAuthService(repo repository.Authorizer) *AuthService {
 	return &AuthService{repo: repo}
+}
+
+func (s *AuthService) CreateAccount(account models.Account) (int, error) {
+	return s.repo.CreateAccount(account)
+}
+
+func (s *AuthService) UpdateAccount(input models.UpdateAccountInput) error {
+	return s.repo.UpdateAccount(input)
+}
+
+func (s *AuthService) DeleteAccountByPublicId(accountPublicId uuid.UUID) error {
+	return s.repo.DeleteAccountByPublicId(accountPublicId)
 }
 
 func (s *AuthService) GetAccount(token string) (models.Account, error) {
@@ -66,6 +83,10 @@ func (s *AuthService) ParseToken(accessToken string) (int, error) {
 	}
 
 	return claims.AccountId, nil
+}
+
+func (s *AuthService) GetAccountByPrimaryId(accountId int) (models.Account, error) {
+	return s.repo.GetAccountByPrimaryId(accountId)
 }
 
 // generatePasswordHash - hash generare from password

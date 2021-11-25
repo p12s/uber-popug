@@ -6,12 +6,12 @@ import (
 
 // Service - just service
 type Service struct {
-	Authorization
+	Authorizer
 }
 
 // NewService - constructor
 func NewService(repos *repository.Repository) *Service {
 	return &Service{
-		Authorization: NewAuthService(repos.Authorization),
+		Authorizer: NewAuthService(repos.Authorizer),
 	}
 }

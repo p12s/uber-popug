@@ -9,10 +9,10 @@ import (
 type Role int
 
 const (
-	Employee Role = iota // TODO перевести все константы в верхний регистр
-	Manager
-	Accountant
-	Admin
+	ROLE_EMPLOYEE Role = iota
+	ROLE_MANAGER
+	ROLE_ACCOUNTANT
+	ROLE_ADMIN
 )
 
 type Account struct {
@@ -23,7 +23,7 @@ type Account struct {
 	Password  string     `json:"password,omitempty"`
 	Token     string     `json:"token,omitempty"`
 	Role      Role       `json:"role" db:"role"`
-	CreatedAt *time.Time `json:"created_at" db:"created_at"`
+	CreatedAt *time.Time `json:"created_at,omitempty" db:"created_at"`
 }
 
 type SignInInput struct {
@@ -31,12 +31,29 @@ type SignInInput struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type UpdateAccountInput struct {
+	PublicId uuid.UUID `json:"public_id" db:"public_id" binding:"required"`
+	Name     *string   `json:"name" db:"role"`
+	Password *string   `json:"password,omitempty" db:"role"`
+	Role     *Role     `json:"role" db:"role"`
+}
+
+type AccountToken struct {
+	PublicId uuid.UUID `json:"public_id" db:"public_id" binding:"required"`
+	Token    string    `json:"token" db:"token" binding:"token"`
+}
+
+type DeleteAccountInput struct {
+	PublicId uuid.UUID `json:"public_id" db:"public_id" binding:"required"`
+}
+
 type EventType string
 
 const (
-	EVENT_ACCOUNT_CREATED EventType = "auth.created"
-	EVENT_ACCOUNT_UPDATED EventType = "auth.updated"
-	EVENT_ACCOUNT_REMOVED EventType = "auth.removed"
+	EVENT_ACCOUNT_CREATED       EventType = "auth.created"
+	EVENT_ACCOUNT_UPDATED       EventType = "auth.updated"
+	EVENT_ACCOUNT_DELETED       EventType = "auth.deleted"
+	EVENT_ACCOUNT_TOKEN_UPDATED EventType = "auth.token_updated"
 )
 
 type Event struct {

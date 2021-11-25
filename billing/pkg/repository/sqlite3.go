@@ -8,6 +8,8 @@ import (
 const (
 	accountTable = "account"
 	taskTable    = "task"
+	billingTable = "billing"
+	paymentTable = "payment"
 )
 
 // Config - db

@@ -2,8 +2,8 @@ package service
 
 import (
 	"github.com/google/uuid"
-	"github.com/p12s/uber-popug/billing/pkg/models"
-	"github.com/p12s/uber-popug/billing/pkg/repository"
+	"github.com/p12s/uber-popug/analitycs/pkg/models"
+	"github.com/p12s/uber-popug/analitycs/pkg/repository"
 )
 
 type Tasker interface {

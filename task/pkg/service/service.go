@@ -4,13 +4,11 @@ import (
 	"github.com/p12s/uber-popug/task/pkg/repository"
 )
 
-// Service - just service
 type Service struct {
 	Authorizer
 	Tasker
 }
 
-// NewService - constructor
 func NewService(repos *repository.Repository) *Service {
 	return &Service{
 		Authorizer: NewAuthService(repos.Authorizer),

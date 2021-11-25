@@ -1,12 +1,11 @@
 package service
 
 import (
-	"crypto/sha1"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
 	"github.com/p12s/uber-popug/billing/pkg/models"
 	"github.com/p12s/uber-popug/billing/pkg/repository"
 )
@@ -25,41 +24,34 @@ type tokenClaims struct {
 
 type Authorizer interface {
 	CreateAccount(account models.Account) (int, error)
-	GenerateToken(username, password string) (string, error)
+	UpdateAccount(input models.UpdateAccountInput) error
+	DeleteAccountByPublicId(accountPublicId uuid.UUID) error
 	ParseToken(token string) (int, error)
-	GetAccountById(accountId int) (models.Account, error)
+	// это костыльный метод - опираться нужно только на publicId uuid.UUID
+	GetAccountByPrimaryId(accountId int) (models.Account, error)
+	GetEmployeeAccounts() ([]models.Account, error)
 }
 
 // AuthService - service
 type AuthService struct {
-	repo repository.Authorization
+	repo repository.Authorizer
 }
 
 // NewAuthService - constructor
-func NewAuthService(repo repository.Authorization) *AuthService {
+func NewAuthService(repo repository.Authorizer) *AuthService {
 	return &AuthService{repo: repo}
 }
 
 func (s *AuthService) CreateAccount(account models.Account) (int, error) {
-	account.Password = generatePasswordHash(account.Password)
 	return s.repo.CreateAccount(account)
 }
 
-// GenerateToken - token generation
-func (s *AuthService) GenerateToken(username, password string) (string, error) {
-	account, err := s.repo.GetAccount(username, generatePasswordHash(password))
-	if err != nil {
-		return "", errors.New("account with this login/pass is not found")
-	}
+func (s *AuthService) UpdateAccount(input models.UpdateAccountInput) error {
+	return s.repo.UpdateAccount(input)
+}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &tokenClaims{
-		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(tokenTTL).Unix(),
-			IssuedAt:  time.Now().Unix(),
-		},
-		account.Id,
-	})
-	return token.SignedString([]byte(signingKey))
+func (s *AuthService) DeleteAccountByPublicId(accountPublicId uuid.UUID) error {
+	return s.repo.DeleteAccountByPublicId(accountPublicId)
 }
 
 // ParseToken - getting authorized data from token
@@ -83,13 +75,10 @@ func (s *AuthService) ParseToken(accessToken string) (int, error) {
 	return claims.AccountId, nil
 }
 
-// generatePasswordHash - hash generare from password
-func generatePasswordHash(password string) string {
-	hash := sha1.New() // #nosec
-	hash.Write([]byte(password))
-	return fmt.Sprintf("%x", hash.Sum([]byte(salt)))
+func (s *AuthService) GetAccountByPrimaryId(accountId int) (models.Account, error) {
+	return s.repo.GetAccountByPrimaryId(accountId)
 }
 
-func (s *AuthService) GetAccountById(accountId int) (models.Account, error) {
-	return s.repo.GetAccountById(accountId)
+func (s *AuthService) GetEmployeeAccounts() ([]models.Account, error) {
+	return s.repo.GetEmployeeAccounts()
 }

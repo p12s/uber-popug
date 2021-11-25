@@ -2,15 +2,17 @@ package repository
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/p12s/uber-popug/auth/pkg/models"
 )
 
-// Authorization - signup/signin
-type Authorization interface {
+type Authorizer interface {
 	CreateAccount(account models.Account) (int, error)
+	UpdateAccount(input models.UpdateAccountInput) error
+	DeleteAccountByPublicId(accountPublicId uuid.UUID) error
 	GetAccount(username, password string) (models.Account, error)
 	GetAccountById(accountId int) (models.Account, error)
 }
@@ -29,12 +31,51 @@ func (r *Auth) CreateAccount(account models.Account) (int, error) {
 
 	query := fmt.Sprintf(`INSERT INTO %s (public_id, name, username, password_hash, role)
 		values ($1, $2, $3, $4, $5) RETURNING id`, accountTable)
-	row := r.db.QueryRow(query, uuid.New(), account.Name, account.Username, account.Password, models.Employee)
+	row := r.db.QueryRow(query, uuid.New(), account.Name, account.Username, account.Password, models.ROLE_EMPLOYEE)
 	if err := row.Scan(&id); err != nil {
 		return 0, fmt.Errorf("create account: %w", err)
 	}
 
 	return id, nil
+}
+
+func (r *Auth) UpdateAccount(input models.UpdateAccountInput) error {
+	setValues := make([]string, 0)
+	args := make([]interface{}, 0)
+	argId := 1
+
+	if input.Name != nil {
+		setValues = append(setValues, fmt.Sprintf("name=$%d", argId))
+		args = append(args, *input.Name)
+		argId++
+	}
+
+	if input.Password != nil {
+		setValues = append(setValues, fmt.Sprintf("password_hash=$%d", argId))
+		args = append(args, *input.Password)
+		argId++
+	}
+
+	if input.Role != nil {
+		setValues = append(setValues, fmt.Sprintf("role=$%d", argId))
+		args = append(args, *input.Role)
+		argId++
+	}
+
+	setQuery := strings.Join(setValues, ", ")
+
+	query := fmt.Sprintf(`UPDATE %s SET %s WHERE public_id = $%d`,
+		accountTable, setQuery, argId)
+	args = append(args, input.PublicId.String())
+
+	_, err := r.db.Exec(query, args...)
+	return err
+}
+
+func (r *Auth) DeleteAccountByPublicId(accountPublicId uuid.UUID) error {
+	query := fmt.Sprintf(`DELETE FROM %s WHERE public_id = $1`, accountTable)
+	_, err := r.db.Exec(query, accountPublicId.String())
+	return err
 }
 
 func (r *Auth) GetAccount(username, password string) (models.Account, error) {

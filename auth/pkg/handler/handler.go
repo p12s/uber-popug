@@ -32,6 +32,12 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		token.GET("/", h.token)
 	}
 
+	account := router.Group("/account", h.userIdentity)
+	{
+		account.PUT("/", h.updateAccount)
+		account.DELETE("/", h.deleteAccount)
+	}
+
 	return router
 }
 

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
 	"github.com/p12s/uber-popug/auth/pkg/models"
 	"github.com/p12s/uber-popug/auth/pkg/repository"
 )
@@ -23,21 +24,22 @@ type tokenClaims struct {
 	AccountId int `json:"account_id"`
 }
 
-// Authorization - signup/signin
-type Authorization interface {
+type Authorizer interface {
 	CreateAccount(account models.Account) (int, error)
-	GenerateToken(username, password string) (string, error)
+	UpdateAccount(input models.UpdateAccountInput) error
+	DeleteAccountByPublicId(accountPublicId uuid.UUID) error
+	GenerateToken(username, password string) (models.AccountToken, error)
 	ParseToken(token string) (int, error)
 	GetAccountById(accountId int) (models.Account, error)
 }
 
 // AuthService - service
 type AuthService struct {
-	repo repository.Authorization
+	repo repository.Authorizer
 }
 
 // NewAuthService - constructor
-func NewAuthService(repo repository.Authorization) *AuthService {
+func NewAuthService(repo repository.Authorizer) *AuthService {
 	return &AuthService{repo: repo}
 }
 
@@ -46,12 +48,24 @@ func (s *AuthService) CreateAccount(account models.Account) (int, error) {
 	return s.repo.CreateAccount(account)
 }
 
-// GenerateToken - token generation
-func (s *AuthService) GenerateToken(username, password string) (string, error) {
+func (s *AuthService) UpdateAccount(input models.UpdateAccountInput) error {
+	if input.Password != nil {
+		*input.Password = generatePasswordHash(*input.Password)
+	}
+	return s.repo.UpdateAccount(input)
+}
+
+func (s *AuthService) DeleteAccountByPublicId(accountPublicId uuid.UUID) error {
+	return s.repo.DeleteAccountByPublicId(accountPublicId)
+}
+
+func (s *AuthService) GenerateToken(username, password string) (models.AccountToken, error) {
+	var accountToken models.AccountToken
 	account, err := s.repo.GetAccount(username, generatePasswordHash(password))
 	if err != nil {
-		return "", errors.New("account with this login/pass is not found")
+		return accountToken, errors.New("account with this login/pass is not found")
 	}
+	accountToken.PublicId = account.PublicId
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &tokenClaims{
 		jwt.StandardClaims{
@@ -60,10 +74,14 @@ func (s *AuthService) GenerateToken(username, password string) (string, error) {
 		},
 		account.Id,
 	})
-	return token.SignedString([]byte(signingKey))
+	accountToken.Token, err = token.SignedString([]byte(signingKey))
+	if err != nil {
+		return accountToken, fmt.Errorf("token generate error: %x", err.Error())
+	}
+
+	return accountToken, nil
 }
 
-// ParseToken - getting authorized data from token
 func (s *AuthService) ParseToken(accessToken string) (int, error) {
 	token, err := jwt.ParseWithClaims(accessToken, &tokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {

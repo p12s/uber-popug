@@ -40,8 +40,11 @@ func main() {
 	if err != nil {
 		logrus.Fatalf("kafka error: %s\n", err.Error())
 	}
-	go kafka.Subscribe(repos)
+	go kafka.Subscribe(services)
 	handlers := handler.NewHandler(services, kafka)
+
+	// TODO сделать крон-процесс, чтобы в конце буднего дня запускалось
+	// событие EVENT_BILLING_CYCLE_CLOSED - закрытие расчетного дня
 
 	srv := new(Server)
 	go func() {
