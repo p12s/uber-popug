@@ -82,6 +82,11 @@ const (
 
 	EVENT_BILLING_CYCLE_CLOSED              EventType = "billing.cycle_closed"
 	EVENT_BILLING_PAYED_TRANSACTION_APPLIED EventType = "billing.payed_transaction_applied"
+	// TODO
+	// забыл еще добавить транзакцию на зачисление и списание по таскам.
+	// их надо будет консьюмить в аналитике, что бы считать кому, сколько и за что было заплачено.
+	// Т.е. в аналитику уйдет событие transaction applied
+	// в котором будет один из трех видов транзакции (списание, зачисление, выплата денег)
 )
 
 type Event struct {

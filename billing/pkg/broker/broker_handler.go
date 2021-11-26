@@ -101,6 +101,12 @@ func (k *Kafka) createTask(payload interface{}, service *service.Service) {
 
 	// created_at при сохранении игнорирую, оно записывается как DATETIME DEFAULT CURRENT_TIMESTAMP
 	// - проекция дат создания в сервисах может пригодиться
+
+	// TODO
+	// вот тут, по идее, должна быть запись цены на задачу.
+	// в случае транзакции, ты просто вызываешь этот же метод с публичным id и без остальных данных
+	// Т.е. метод должен делать put (create_or_update), и его вызов должен происходить в двух местах.
+	// Если хочешь решить проблему того, что задача не создалась в момент транзакции
 	_, err = service.Tasker.CreateTask(data)
 	if err != nil {
 		fmt.Println("error create task in billing:", err.Error())
@@ -111,6 +117,11 @@ func (k *Kafka) createTask(payload interface{}, service *service.Service) {
 	// на момент регистрации этого события, таск может быть не прикреплен ни к какому пользователю
 	// поэтому оставим поле пустым
 	// поле Price также заполним другим BE-событием, вместе с AccountId
+
+	// TODO
+	// тут не понятно, зачем нужен метод на транзакцию в создании задачи, так как ты не знаешь на кого асайнить задачу,
+	// а цены должны лежать в таблице с задачами, что бы требования наши выполнялись
+	// (цена задачи не меняется от количества асайнов)
 	err = service.SaveOrUpdateTransaction(models.Bill{
 		PublicId:          uuid.New(),
 		TaskId:            data.PublicId,
@@ -167,6 +178,9 @@ func (k *Kafka) milletBowlTask(payload interface{}, service *service.Service) {
 		fmt.Println("billing.task completed", data.PublicId)
 	}
 
+	// TODO
+	// я бы засунул эту логику в создание задачи, так как у тебя вызов события для
+	// одной задачи может сгенерировать разную цену для одной и той же задачи, что нарушает наши требования
 	err = service.SaveOrUpdateTransaction(models.Bill{
 		PublicId: uuid.New(),
 		Price:    rand.Intn(MAX_PRICE-MIN_PRICE) + MIN_PRICE,
@@ -181,6 +195,7 @@ func (k *Kafka) milletBowlTask(payload interface{}, service *service.Service) {
 func (k *Kafka) closeBillingCycle(payload interface{}, service *service.Service) {
 	// проверить в таблице выплат payment, не провели ли сегодня выплату (защита от повторной обработки)
 	// пройти по каждому аккаунту, посчитать заработок, обнулить
+	// обнулять нужно только балансы (если они +), транзакции остаются неизменны
 	accounts, err := service.Authorizer.GetEmployeeAccounts()
 	if err != nil {
 		fmt.Println("error getting employee accounts in billing:", err.Error())
