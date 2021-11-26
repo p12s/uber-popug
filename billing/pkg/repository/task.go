@@ -3,12 +3,15 @@ package repository
 import (
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/p12s/uber-popug/billing/pkg/models"
 )
 
 type Tasker interface {
 	CreateTask(task models.Task) (int, error)
+	BirdCageTask(taskId uuid.UUID, accountId uuid.UUID) error
+	MilletBowlTask(taskId uuid.UUID) error
 }
 
 type Task struct {
@@ -30,4 +33,16 @@ func (r *Task) CreateTask(task models.Task) (int, error) {
 	}
 
 	return id, nil
+}
+
+func (r *Task) BirdCageTask(taskId uuid.UUID, accountId uuid.UUID) error {
+	query := fmt.Sprintf(`UPDATE %s SET assigned_account_id = $1 WHERE public_id = $2`, taskTable)
+	_, err := r.db.Exec(query, accountId.String(), taskId.String())
+	return err
+}
+
+func (r *Task) MilletBowlTask(taskId uuid.UUID) error {
+	query := fmt.Sprintf(`UPDATE %s SET status = $1 WHERE public_id = $2`, taskTable)
+	_, err := r.db.Exec(query, models.TASK_MILLET_IN_BOWL, taskId.String())
+	return err
 }

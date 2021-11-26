@@ -30,6 +30,9 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		task.GET("/:id", h.getTask)
 		task.GET("/", h.getAllTask)
 		task.POST("/", h.createTask)
+		task.PUT("/bird-cage", h.birdCageTask)
+		task.PUT("/millet-bowl", h.milletBowlTask)
+		task.GET("/bird-cage-all", h.birdCageAllTasks)
 	}
 
 	return router
