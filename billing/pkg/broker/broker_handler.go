@@ -209,5 +209,6 @@ func (k *Kafka) closeBillingCycle(payload interface{}, service *service.Service)
 }
 
 func (k *Kafka) pay(payload interface{}, service *service.Service) {
+	// TODO
 	// выплата - отметка в payment что выплачено, можно отправку уведмления
 }
